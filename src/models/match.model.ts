@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import { Schema, Document, model } from "mongoose";
 
 interface IMatch extends Document {
   teamA: string; // ID del equipo A
@@ -22,4 +22,5 @@ const MatchSchema: Schema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model<IMatch>("Match", MatchSchema);
+const MatchModel = model<IMatch>("Match", MatchSchema);
+export default MatchModel;

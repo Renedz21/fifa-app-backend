@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import { Schema, Document, model } from "mongoose";
 
 interface ITeam extends Document {
   name: string;
@@ -11,9 +11,10 @@ interface ITeam extends Document {
 const TeamSchema: Schema = new Schema({
   name: { type: String, required: true },
   logoUrl: { type: String },
-  players: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  players: [{ type: Schema.Types.ObjectId, ref: "Player" }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model<ITeam>("Team", TeamSchema);
+const TeamModel = model<ITeam>("Team", TeamSchema);
+export default TeamModel;

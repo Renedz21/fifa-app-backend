@@ -1,9 +1,8 @@
 import { Document, model, Schema } from "mongoose";
 
-export interface IUserDocument extends Document {
+export interface IPlayerDocument extends Document {
   username: string;
   email: string;
-  password: string;
   fullName: string;
   avatarUrl?: string;
   position: string;
@@ -28,11 +27,10 @@ export interface IUserDocument extends Document {
   updatedAt: Date;
 }
 
-const UserSchema: Schema = new Schema<IUserDocument>(
+const PlayerSchema: Schema = new Schema<IPlayerDocument>(
   {
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
     fullName: { type: String, required: true },
     avatarUrl: { type: String },
     position: { type: String, required: true },
@@ -59,5 +57,5 @@ const UserSchema: Schema = new Schema<IUserDocument>(
   { timestamps: true }
 );
 
-const UserModel = model<IUserDocument>("User", UserSchema);
-export default UserModel;
+const PlayerModel = model<IPlayerDocument>("Player", PlayerSchema);
+export default PlayerModel;
