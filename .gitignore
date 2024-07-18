@@ -1,0 +1,12 @@
+# Project dependencies
+/node_modules
+
+# Misc
+.DS_Store
+
+# IDE files
+.idea
+.vscode
+
+# Environment variables
+.env
