@@ -1,6 +1,8 @@
 import express, { Application } from "express";
 import cors from "cors";
+import compress from "compression";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import { envs } from "./constants/environment";
 import connection from "./config/connection";
 import { PlayerRoute, TeamRoute } from "./routes";
@@ -12,16 +14,26 @@ const logger = createLogger();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use(cookieParser());
 app.use(
   cors({
     origin: envs.APP_ORIGIN,
     methods: ["GET", "POST", "PATCH", "DELETE"],
   })
 );
-app.use(helmet());
+app.use(
+  helmet({
+    noSniff: true,
+    xssFilter: true,
+    hidePoweredBy: true,
+    frameguard: {
+      action: "deny",
+    },
+  })
+);
+app.use(compress());
 
-app.use("/api/v1/player", PlayerRoute);
+app.use("/api/v1/players", PlayerRoute);
 app.use("/api/v1/teams", TeamRoute);
 
 app.use(configureGlobalErrorHandler(logger));

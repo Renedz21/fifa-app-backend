@@ -1,11 +1,16 @@
 import { Document, model, Schema } from "mongoose";
+import { compareValue, hashValue } from "../lib/encrypt";
 
-export interface IPlayerDocument extends Document {
+export interface PlayerDocument extends Document {
   username: string;
   email: string;
+  password: string;
   fullName: string;
   avatarUrl?: string;
-  position: string;
+  favoriteTeam: {
+    name: string;
+    logoUrl: string;
+  };
   skillLevel: {
     offense: number;
     defense: number;
@@ -25,15 +30,26 @@ export interface IPlayerDocument extends Document {
   strengths: string[];
   createdAt: Date;
   updatedAt: Date;
+  verified: boolean;
+  comparePassword(val: string): Promise<boolean>;
+  omitPassword(): Pick<
+    PlayerDocument,
+    "_id" | "email" | "verified" | "createdAt" | "updatedAt" | "__v"
+  >;
 }
 
-const PlayerSchema: Schema = new Schema<IPlayerDocument>(
+const PlayerSchema: Schema = new Schema<PlayerDocument>(
   {
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    verified: { type: Boolean, required: true, default: false },
     fullName: { type: String, required: true },
     avatarUrl: { type: String },
-    position: { type: String, required: true },
+    favoriteTeam: {
+      name: { type: String, required: true, default: "" },
+      logoUrl: { type: String, required: true, default: "" },
+    },
     skillLevel: {
       offense: { type: Number, required: true, min: 0, max: 100 },
       defense: { type: Number, required: true, min: 0, max: 100 },
@@ -57,5 +73,24 @@ const PlayerSchema: Schema = new Schema<IPlayerDocument>(
   { timestamps: true }
 );
 
-const PlayerModel = model<IPlayerDocument>("Player", PlayerSchema);
+PlayerSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    return next();
+  }
+
+  this.password = await hashValue(this.password as string);
+  return next();
+});
+
+PlayerSchema.methods.comparePassword = async function (val: string) {
+  return compareValue(val, this.password);
+};
+
+PlayerSchema.methods.omitPassword = function () {
+  const user = this.toObject();
+  delete user.password;
+  return user;
+};
+
+const PlayerModel = model<PlayerDocument>("Player", PlayerSchema);
 export default PlayerModel;

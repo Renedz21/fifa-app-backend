@@ -1,8 +1,15 @@
 import { Schema, Document, model } from "mongoose";
 
 interface IMatch extends Document {
-  teamA: string; // ID del equipo A
-  teamB: string; // ID del equipo B
+  championship: string; // ID del campeonato
+  teamA: {
+    name: string;
+    logoUrl: string;
+  };
+  teamB: {
+    name: string;
+    logoUrl: string;
+  };
   scoreTeamA: number;
   scoreTeamB: number;
   date: Date;
@@ -12,8 +19,19 @@ interface IMatch extends Document {
 }
 
 const MatchSchema: Schema = new Schema({
-  teamA: { type: Schema.Types.ObjectId, ref: "Team", required: true },
-  teamB: { type: Schema.Types.ObjectId, ref: "Team", required: true },
+  championship: {
+    type: Schema.Types.ObjectId,
+    ref: "Championship",
+    required: true,
+  },
+  teamA: {
+    name: { type: String, required: true },
+    logoUrl: { type: String, required: true },
+  },
+  teamB: {
+    name: { type: String, required: true },
+    logoUrl: { type: String, required: true },
+  },
   scoreTeamA: { type: Number, default: 0 },
   scoreTeamB: { type: Number, default: 0 },
   date: { type: Date, required: true },

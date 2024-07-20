@@ -10,3 +10,10 @@
 
 # Environment variables
 .env
+
+# Logs
+/logs
+
+# Build files
+/build
+/dist

@@ -1,18 +1,38 @@
 import { Schema, Document, model } from "mongoose";
 
 interface IResult extends Document {
-  match: string; // ID del partido
-  winningTeam: string; // ID del equipo ganador
-  losingTeam: string; // ID del equipo perdedor
+  matchId: string; // ID del partido
+  winningTeam: {
+    name: string;
+    logoUrl: string;
+  };
+  losingTeam: {
+    name: string;
+    logoUrl: string;
+  };
   draw: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
 const ResultSchema: Schema = new Schema({
-  match: { type: Schema.Types.ObjectId, ref: "Match", required: true },
-  winningTeam: { type: Schema.Types.ObjectId, ref: "Team" },
-  losingTeam: { type: Schema.Types.ObjectId, ref: "Team" },
+  matchId: { type: Schema.Types.ObjectId, ref: "Match", required: true },
+  winningTeam: {
+    name: {
+      type: String,
+    },
+    logoUrl: {
+      type: String,
+    },
+  },
+  losingTeam: {
+    name: {
+      type: String,
+    },
+    logoUrl: {
+      type: String,
+    },
+  },
   draw: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

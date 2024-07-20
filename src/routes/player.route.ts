@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createPlayer,
+  deletePlayer,
   getAllPlayers,
   getOnePlayer,
   updatePlayer,
@@ -12,6 +13,6 @@ router.post("/", createPlayer);
 router.get("/", getAllPlayers);
 router.get("/:userId", getOnePlayer);
 router.patch("/:userId", updatePlayer);
-// router.delete("/:userId", getOnePlayer);
+router.delete("/:userId", deletePlayer);
 
 export default router;

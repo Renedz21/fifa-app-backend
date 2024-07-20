@@ -2,7 +2,10 @@ import { Schema, Document, model } from "mongoose";
 
 interface IChampionship extends Document {
   name: string;
-  teams: string[]; // Array de IDs de equipos
+  teams: {
+    name: string;
+    logoUrl: string;
+  }[];
   matches: string[]; // Array de IDs de partidos
   startDate: Date;
   endDate: Date;
@@ -12,7 +15,12 @@ interface IChampionship extends Document {
 
 const ChampionshipSchema: Schema = new Schema({
   name: { type: String, required: true },
-  teams: [{ type: Schema.Types.ObjectId, ref: "Team" }],
+  teams: [
+    {
+      name: { type: String, required: true },
+      logoUrl: { type: String, required: true },
+    },
+  ],
   matches: [{ type: Schema.Types.ObjectId, ref: "Match" }],
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
