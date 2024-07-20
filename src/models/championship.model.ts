@@ -14,7 +14,7 @@ interface IChampionship extends Document {
 }
 
 const ChampionshipSchema: Schema = new Schema({
-  name: { type: String, required: true },
+  name: { type: String, required: true, index: true },
   teams: [
     {
       name: { type: String, required: true },

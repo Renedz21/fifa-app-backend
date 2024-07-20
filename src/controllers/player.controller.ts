@@ -2,7 +2,7 @@ import { HTTP_RESPONSE_CODE } from "../constants/appHttpCode";
 import PlayerModel from "../models/player.model";
 import catchErrors from "../utils/catchErrors";
 
-export const createPlayer = catchErrors(async (req, res) => {
+const createPlayer = catchErrors(async (req, res) => {
   const { username, ...data } = req.body;
 
   const player = await PlayerModel.exists({ username });
@@ -22,7 +22,7 @@ export const createPlayer = catchErrors(async (req, res) => {
   });
 });
 
-export const getAllPlayers = catchErrors(async (req, res) => {
+const getAllPlayers = catchErrors(async (req, res) => {
   const players = await PlayerModel.find();
 
   res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
@@ -31,7 +31,7 @@ export const getAllPlayers = catchErrors(async (req, res) => {
   });
 });
 
-export const getOnePlayer = catchErrors(async (req, res) => {
+const getOnePlayer = catchErrors(async (req, res) => {
   const { userId } = req.params;
 
   const player = await PlayerModel.findOne({ _id: userId });
@@ -42,7 +42,7 @@ export const getOnePlayer = catchErrors(async (req, res) => {
   });
 });
 
-export const updatePlayer = catchErrors(async (req, res) => {
+const updatePlayer = catchErrors(async (req, res) => {
   const { userId } = req.params;
   const { ...data } = req.body;
 
@@ -57,7 +57,7 @@ export const updatePlayer = catchErrors(async (req, res) => {
   });
 });
 
-export const deletePlayer = catchErrors(async (req, res) => {
+const deletePlayer = catchErrors(async (req, res) => {
   const { userId } = req.params;
 
   const player = await PlayerModel.findOneAndDelete({ _id: userId });
@@ -68,7 +68,7 @@ export const deletePlayer = catchErrors(async (req, res) => {
   });
 });
 
-export const selectFavoriteTeam = catchErrors(async (req, res) => {
+const selectFavoriteTeam = catchErrors(async (req, res) => {
   const { userId } = req.params;
   const { name, logoUrl } = req.body;
 
@@ -89,7 +89,7 @@ export const selectFavoriteTeam = catchErrors(async (req, res) => {
   }
 });
 
-export const updateFavoriteTeam = catchErrors(async (req, res) => {
+const updateFavoriteTeam = catchErrors(async (req, res) => {
   const { userId } = req.params;
   const { name, logoUrl } = req.body;
 
@@ -109,3 +109,13 @@ export const updateFavoriteTeam = catchErrors(async (req, res) => {
     res.status(500).send("Error updating favorite team");
   }
 });
+
+export {
+  createPlayer,
+  getAllPlayers,
+  getOnePlayer,
+  updatePlayer,
+  deletePlayer,
+  selectFavoriteTeam,
+  updateFavoriteTeam,
+};

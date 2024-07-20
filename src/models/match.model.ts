@@ -1,5 +1,10 @@
 import { Schema, Document, model } from "mongoose";
 
+enum TypeStatus {
+  scheduled = "scheduled",
+  played = "played",
+}
+
 interface IMatch extends Document {
   championship: string; // ID del campeonato
   teamA: {
@@ -13,7 +18,7 @@ interface IMatch extends Document {
   scoreTeamA: number;
   scoreTeamB: number;
   date: Date;
-  status: "scheduled" | "played";
+  status: TypeStatus;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,7 +40,7 @@ const MatchSchema: Schema = new Schema({
   scoreTeamA: { type: Number, default: 0 },
   scoreTeamB: { type: Number, default: 0 },
   date: { type: Date, required: true },
-  status: { type: String, enum: ["scheduled", "played"], default: "scheduled" },
+  status: { type: String, enum: [TypeStatus], default: TypeStatus.scheduled },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
