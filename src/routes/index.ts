@@ -1,5 +1,5 @@
 export { default as PlayerRoute } from "./player.route";
-// export { default as TeamRoute } from "./team.route";
+export { default as TeamRoute } from "./teams.route";
 // export { default as UserRoute } from "./user.route";
 // export { default as AuthRoute } from "./auth.route";
 // export { default as MatchRoute } from "./match.route";

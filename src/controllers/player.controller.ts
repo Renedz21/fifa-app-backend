@@ -1,7 +1,7 @@
+import { HTTP_RESPONSE_CODE } from "../constants/appHttpCode";
 import PlayerModel from "../models/user.model";
 import appAssert from "../utils/appAsset";
 import catchErrors from "../utils/catchErrors";
-import { CONFLICT, CREATED, OK } from "../constants/appHttpCode";
 
 export const createPlayer = catchErrors(async (req, res) => {
   // Validar si el usuario ya existe
@@ -9,7 +9,7 @@ export const createPlayer = catchErrors(async (req, res) => {
 
   const player = await PlayerModel.exists({ username });
 
-  appAssert(!player, CONFLICT, "El usuario ya existe");
+  appAssert(!player, HTTP_RESPONSE_CODE.CONFLICT, "El usuario ya existe");
 
   // Crear un nuevo usuario
 
@@ -17,7 +17,7 @@ export const createPlayer = catchErrors(async (req, res) => {
 
   // Enviar respuesta
 
-  res.status(CREATED).json({
+  res.status(HTTP_RESPONSE_CODE.CREATED).json({
     status: "success",
     data: newUser,
   });
@@ -26,7 +26,7 @@ export const createPlayer = catchErrors(async (req, res) => {
 export const getAllPlayers = catchErrors(async (req, res) => {
   const players = await PlayerModel.find();
 
-  res.status(OK).json({
+  res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
     data: players,
   });
@@ -37,9 +37,9 @@ export const getOnePlayer = catchErrors(async (req, res) => {
 
   const player = await PlayerModel.findOne({ _id: userId });
 
-  appAssert(player, CONFLICT, "Usuario no encontrado");
+  appAssert(player, HTTP_RESPONSE_CODE.CONFLICT, "Usuario no encontrado");
 
-  res.status(OK).json({
+  res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
     data: player,
   });
@@ -53,9 +53,9 @@ export const updatePlayer = catchErrors(async (req, res) => {
     new: true,
   });
 
-  appAssert(player, CONFLICT, "Usuario no encontrado");
+  appAssert(player, HTTP_RESPONSE_CODE.CONFLICT, "Usuario no encontrado");
 
-  res.status(OK).json({
+  res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
     data: player,
     message: "Usuario actualizado correctamente",
@@ -67,9 +67,9 @@ export const deletePlayer = catchErrors(async (req, res) => {
 
   const player = await PlayerModel.findOneAndDelete({ _id: userId });
 
-  appAssert(player, CONFLICT, "Usuario no encontrado");
+  appAssert(player, HTTP_RESPONSE_CODE.CONFLICT, "Usuario no encontrado");
 
-  res.status(OK).json({
+  res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
     message: "Usuario eliminado correctamente",
   });
