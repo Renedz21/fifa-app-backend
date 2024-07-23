@@ -40,6 +40,19 @@ const getAllChampionships = catchErrors(async (req, res) => {
   });
 });
 
+const getOneChampionship = catchErrors(async (req, res) => {
+  const { championshipId } = req.params;
+  // Realizar la consulta con paginación y seleción de campos
+  const championship = await ChampionshipModel.findOne({
+    _id: championshipId,
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: championship,
+  });
+});
+
 const updateTeamsInChampionship = catchErrors(async (req, res) => {
   const { championshipId } = req.params;
   const { teams } = req.body;
@@ -74,4 +87,9 @@ const updateTeamsInChampionship = catchErrors(async (req, res) => {
   });
 });
 
-export { createChampionship, updateTeamsInChampionship, getAllChampionships };
+export {
+  createChampionship,
+  updateTeamsInChampionship,
+  getAllChampionships,
+  getOneChampionship,
+};

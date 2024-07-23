@@ -1,7 +1,7 @@
 import { Schema, Document, model } from "mongoose";
 
 interface IChampionship extends Document {
-  name: string;
+  championshipName: string;
   teams: {
     name: string;
     logoUrl: string;
@@ -14,7 +14,7 @@ interface IChampionship extends Document {
 }
 
 const ChampionshipSchema: Schema = new Schema({
-  name: { type: String, required: true, index: true },
+  championshipName: { type: String, required: true, index: true },
   teams: [
     {
       name: { type: String, required: true },
