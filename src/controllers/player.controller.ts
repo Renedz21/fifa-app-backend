@@ -23,10 +23,33 @@ const createPlayer = catchErrors(async (req, res) => {
 });
 
 const getAllPlayers = catchErrors(async (req, res) => {
-  const players = await PlayerModel.find();
+  const {
+    limit = 10,
+    page = 1,
+    sort = "createdAt",
+    order = "desc",
+    tenantId,
+  } = req.query;
+
+  const pageNum = parseInt(page as string, 10);
+  const limitNum = parseInt(limit as string, 10);
+
+  const sortQuery = {
+    [sort as string]: order === "desc" ? -1 : 1,
+  };
+
+  const players = await PlayerModel.find({ tenantId })
+    .sort(sortQuery as any)
+    .skip((pageNum - 1) * limitNum)
+    .limit(limitNum);
+
+  const totalPlayers = await PlayerModel.countDocuments();
 
   res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
+    total: totalPlayers,
+    page: pageNum,
+    pages: Math.ceil(totalPlayers / limitNum),
     data: players,
   });
 });

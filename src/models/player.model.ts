@@ -1,8 +1,9 @@
-import { Document, model, Schema } from "mongoose";
+import { Document, model, Schema, ObjectId } from "mongoose";
 import { compareValue, hashValue } from "../lib/encrypt";
 
 export interface PlayerDocument extends Document {
   username: string;
+  tenantId: string | ObjectId; // ID de la organización
   email: string;
   password: string;
   fullName: string;
@@ -41,6 +42,7 @@ export interface PlayerDocument extends Document {
 const PlayerSchema: Schema = new Schema<PlayerDocument>(
   {
     username: { type: String, required: true, unique: true },
+    tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     verified: { type: Boolean, required: true, default: false },

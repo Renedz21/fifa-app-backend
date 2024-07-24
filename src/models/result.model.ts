@@ -2,6 +2,7 @@ import { Schema, Document, model } from "mongoose";
 
 interface IResult extends Document {
   matchId: string; // ID del partido
+  tenantId: string; // ID de la organización
   winningTeam: {
     name: string;
     logoUrl: string;
@@ -17,6 +18,7 @@ interface IResult extends Document {
 
 const ResultSchema: Schema = new Schema({
   matchId: { type: Schema.Types.ObjectId, ref: "Match", required: true },
+  tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", required: true },
   winningTeam: {
     name: {
       type: String,

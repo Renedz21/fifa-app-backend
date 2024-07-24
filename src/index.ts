@@ -1,6 +1,6 @@
 import express, { Application } from "express";
 import cors from "cors";
-import compress from "compression";
+import compression from "compression";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import connection from "./config/connection";
@@ -14,6 +14,7 @@ import {
   MatchRoute,
   ResultRoute,
 } from "./routes";
+import limiter from "./utils/limit";
 
 const app: Application = express();
 const logger = createLogger();
@@ -37,7 +38,9 @@ app.use(
     },
   })
 );
-app.use(compress());
+app.use(compression());
+
+app.use("/api/v1", limiter); // Limitador de peticiones
 
 app.use("/api/v1/players", PlayerRoute);
 app.use("/api/v1/teams", TeamRoute);
