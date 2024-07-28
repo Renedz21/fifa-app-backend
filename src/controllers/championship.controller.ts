@@ -1,6 +1,7 @@
-import { ChampionshipModel } from "../models";
+import { ChampionshipModel, MatchModel, PlayerModel } from "../models";
 import catchErrors from "../utils/catchErrors";
 
+//* Crear un campeonato
 const createChampionship = catchErrors(async (req, res) => {
   const { championshipName, ...data } = req.body;
 
@@ -21,6 +22,37 @@ const createChampionship = catchErrors(async (req, res) => {
   res.status(201).json({
     status: "success",
     data: newChampionship,
+  });
+});
+
+//* Agregar un partido a un campeonato en específico
+const addMatchInChampionship = catchErrors(async (req, res) => {
+  const { teamA, teamB, date, ...data } = req.body;
+  const { championshipId } = req.params;
+
+  const championship = await ChampionshipModel.findById({ championshipId });
+
+  if (championship) {
+    res.status(409).json({
+      status: "error",
+      message: "Championship name already exists",
+    });
+  }
+
+  const match = new MatchModel({
+    championship: championshipId,
+    teamA,
+    teamB,
+    date,
+  });
+  await match.save();
+
+  championship?.matches.push(match._id as string);
+  await championship?.save();
+
+  res.status(201).json({
+    status: "success",
+    data: match,
   });
 });
 
@@ -153,6 +185,49 @@ const deleteChampionship = catchErrors(async (req, res) => {
   });
 });
 
+//* Obtener Estadísticas de un Campeonato
+const getChampionshipStats = catchErrors(async (req, res) => {
+  const { championshipId } = req.params;
+
+  const championship = await ChampionshipModel.findById(
+    championshipId
+  ).populate("teams matches");
+
+  if (!championship) {
+    res.status(404).json({
+      status: "fail",
+      message: "Championship not found",
+    });
+  }
+
+  const totalTeams = championship?.teams.length;
+  const totalMatches = championship?.matches.length;
+  const totalGoals = await MatchModel.aggregate([
+    { $match: { championship: championshipId } },
+    {
+      $group: {
+        _id: null,
+        totalGoals: {
+          $sum: {
+            $add: ["$scoreTeamA", "$scoreTeamB"],
+          },
+        },
+      },
+    },
+  ]);
+
+  const stats = {
+    totalTeams,
+    totalMatches,
+    totalGoals: totalGoals[0].totalGoals || 0,
+  };
+
+  res.status(200).json({
+    status: "success",
+    data: stats,
+  });
+});
+
 export {
   createChampionship,
   updateTeamsInChampionship,
@@ -160,4 +235,6 @@ export {
   getOneChampionship,
   deleteChampionship,
   updateChampionship,
+  getChampionshipStats,
+  addMatchInChampionship,
 };

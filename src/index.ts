@@ -1,31 +1,39 @@
 import express, { Application } from "express";
+import passport from "passport";
+
 import cors from "cors";
 import compression from "compression";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import connection from "./config/connection";
+
+import { verifyToken } from "./middleware/auth.middleware";
 import configureGlobalErrorHandler from "./middleware/error.handler";
+
 import { envs } from "./constants/environment";
+import limiter from "./utils/limit";
 import { createLogger } from "./lib/logger";
+
 import {
   PlayerRoute,
   TeamRoute,
   CampionshipRoute,
   MatchRoute,
   ResultRoute,
+  AuthRoute,
 } from "./routes";
-import limiter from "./utils/limit";
 
 const app: Application = express();
 const logger = createLogger();
 
+app.use(passport.initialize());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
     origin: envs.APP_ORIGIN,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    credentials: true,
   })
 );
 app.use(
@@ -39,9 +47,11 @@ app.use(
   })
 );
 app.use(compression());
-
 app.use("/api/v1", limiter); // Limitador de peticiones
 
+app.use("/api/v1/auth", AuthRoute);
+
+app.use(verifyToken);
 app.use("/api/v1/players", PlayerRoute);
 app.use("/api/v1/teams", TeamRoute);
 app.use("/api/v1/championships", CampionshipRoute);

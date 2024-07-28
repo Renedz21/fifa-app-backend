@@ -4,7 +4,7 @@ export { default as MatchRoute } from "./match.route";
 export { default as CampionshipRoute } from "./championship.route";
 export { default as ResultRoute } from "./result.route";
 // export { default as UserRoute } from "./user.route";
-// export { default as AuthRoute } from "./auth.route";
+export { default as AuthRoute } from "./auth.route";
 // export { default as TournamentRoute } from "./tournament.route";
 // export { default as LeagueRoute } from "./league.route";
 // export { default as SeasonRoute } from "./season.route";

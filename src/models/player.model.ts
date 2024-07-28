@@ -1,6 +1,11 @@
 import { Document, model, Schema, ObjectId } from "mongoose";
 import { compareValue, hashValue } from "../lib/encrypt";
 
+enum Role {
+  Player = "player",
+  Admin = "admin",
+}
+
 export interface PlayerDocument extends Document {
   username: string;
   tenantId: string | ObjectId; // ID de la organización
@@ -8,6 +13,8 @@ export interface PlayerDocument extends Document {
   password: string;
   fullName: string;
   avatarUrl?: string;
+  provider?: string;
+  role: string;
   favoriteTeam: {
     name: string;
     logoUrl: string;
@@ -35,29 +42,44 @@ export interface PlayerDocument extends Document {
   comparePassword(val: string): Promise<boolean>;
   omitPassword(): Pick<
     PlayerDocument,
-    "_id" | "email" | "verified" | "createdAt" | "updatedAt" | "__v"
+    | "_id"
+    | "email"
+    | "verified"
+    | "createdAt"
+    | "updatedAt"
+    | "__v"
+    | "role"
+    | "username"
+    | "fullName"
+    | "avatarUrl"
+    | "favoriteTeam"
+    | "skillLevel"
+    | "statistics"
+    | "strengths"
   >;
 }
 
 const PlayerSchema: Schema = new Schema<PlayerDocument>(
   {
-    username: { type: String, required: true, unique: true },
-    tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    verified: { type: Boolean, required: true, default: false },
-    fullName: { type: String, required: true },
+    username: { type: String, unique: true },
+    tenantId: { type: Schema.Types.ObjectId, ref: "Tenant" },
+    email: { type: String, unique: true },
+    password: { type: String },
+    verified: { type: Boolean, default: false },
+    provider: { type: String, default: "" },
+    role: { type: String, default: Role.Player },
+    fullName: { type: String },
     avatarUrl: { type: String },
     favoriteTeam: {
-      name: { type: String, required: true, default: "" },
-      logoUrl: { type: String, required: true, default: "" },
+      name: { type: String, default: "" },
+      logoUrl: { type: String, default: "" },
     },
     skillLevel: {
-      offense: { type: Number, required: true, min: 0, max: 100 },
-      defense: { type: Number, required: true, min: 0, max: 100 },
-      stamina: { type: Number, required: true, min: 0, max: 100 },
-      speed: { type: Number, required: true, min: 0, max: 100 },
-      technique: { type: Number, required: true, min: 0, max: 100 },
+      offense: { type: Number, min: 0, max: 100 },
+      defense: { type: Number, min: 0, max: 100 },
+      stamina: { type: Number, min: 0, max: 100 },
+      speed: { type: Number, min: 0, max: 100 },
+      technique: { type: Number, min: 0, max: 100 },
     },
     statistics: {
       matchesPlayed: { type: Number, default: 0 },
