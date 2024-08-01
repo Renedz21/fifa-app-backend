@@ -66,7 +66,7 @@ const PlayerSchema: Schema = new Schema<PlayerDocument>(
     email: { type: String, unique: true },
     password: { type: String },
     verified: { type: Boolean, default: false },
-    provider: { type: String, default: "" },
+    provider: { type: String, default: "email" },
     role: { type: String, default: Role.Player },
     fullName: { type: String },
     avatarUrl: { type: String },

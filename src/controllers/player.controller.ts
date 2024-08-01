@@ -1,6 +1,9 @@
 import { HTTP_RESPONSE_CODE } from "../constants/appHttpCode";
+import { envs } from "../constants/environment";
 import PlayerModel from "../models/player.model";
 import catchErrors from "../utils/catchErrors";
+
+import jwt from "jsonwebtoken";
 
 const createPlayer = catchErrors(async (req, res) => {
   const { username, ...data } = req.body;
@@ -133,6 +136,16 @@ const updateFavoriteTeam = catchErrors(async (req, res) => {
   }
 });
 
+const getActualUser = catchErrors(async (req, res) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    res.status(401).json({ message: "No token provided" });
+  }
+  const decoded = jwt.verify(token, envs.JWT_KEY);
+  res.status(200).json(decoded);
+});
+
 export {
   createPlayer,
   getAllPlayers,
@@ -141,4 +154,5 @@ export {
   deletePlayer,
   selectFavoriteTeam,
   updateFavoriteTeam,
+  getActualUser,
 };

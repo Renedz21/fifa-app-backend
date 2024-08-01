@@ -24,19 +24,18 @@ export const login = catchErrors(async (req, res) => {
   }
 
   const token = jwt.sign(
-    { userId: user?._id, role: user?.role },
-    envs.JWT_KEY,
+    { userId: user?._id, role: user?.role, email: user?.email },
+    JWT_SECRET,
     {
       expiresIn: "1h",
     }
   );
 
   res.cookie("token", token, {
-    httpOnly: true,
+    // httpOnly: true,
+    httpOnly: process.env.NODE_ENV === "production",
     secure: process.env.NODE_ENV === "production",
     expires: new Date(Date.now() + 3600000), // 1 hour
-    path: "/",
-    sameSite: "none",
     maxAge: 3600000,
   });
   res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
@@ -73,6 +72,14 @@ passport.use(
         return done(null, undefined);
       }
 
+      const user = await PlayerModel.findOne({
+        email: profile.emails[0].value,
+      });
+
+      if (user) {
+        return done(null, user);
+      }
+
       const newUser = new PlayerModel({
         email: profile.emails[0].value,
         username: profile.displayName,
@@ -100,7 +107,7 @@ passport.deserializeUser((user, done) => {
 
 export const generateToken = (user: any) => {
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
+    { userId: user.id, email: user.email, role: user.role },
     JWT_SECRET,
     { expiresIn: "1h" }
   );
@@ -120,10 +127,16 @@ export const authenticateGoogleCallback = (
       return res.redirect("http://localhost:5173/login");
     }
     const token = generateToken(user);
-    res.cookie("google_jwt", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+    res.cookie("token", token, {
+      // httpOnly: true,
+      httpOnly: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production",
+      expires: new Date(Date.now() + 3600000), // 1 hour
+      maxAge: 3600000,
+    });
+    res.send({
+      token,
+      user,
     });
     res.redirect("http://localhost:5173/");
   })(req, res, next);
