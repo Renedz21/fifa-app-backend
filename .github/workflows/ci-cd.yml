@@ -36,7 +36,18 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: edzon21/esportsfusion-server:latest
+          tags: edzon21/my-express-app:latest
+          build-args: |
+            PORT=${{ secrets.PORT }}
+            MONGODB_URL=${{ secrets.MONGODB_URL }}
+            APP_ORIGIN=${{ secrets.APP_ORIGIN }}
+            JWT_KEY=${{ secrets.JWT_KEY }}
+            PRIVATE_GOOGLE_CLIENT_ID=${{ secrets.PRIVATE_GOOGLE_CLIENT_ID }}
+            PRIVATE_GOOGLE_CLIENT_SECRET=${{ secrets.PRIVATE_GOOGLE_CLIENT_SECRET }}
+            REDIRECT_URL=${{ secrets.REDIRECT_URL }}
+            CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+            CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+            CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
 
       - name: Deploy to Render
         run: |
@@ -44,4 +55,18 @@ jobs:
           curl -X POST https://api.render.com/deploy \
             -H 'Authorization: Bearer ${{ secrets.RENDER_API_KEY }}' \
             -H 'Content-Type: application/json' \
-            -d '{"serviceId": "${{ secrets.RENDER_SERVICE_ID }}"}'
+            -d '{
+                  "serviceId": "${{ secrets.RENDER_SERVICE_ID }}",
+                  "envVars": {
+                    "PORT": "${{ secrets.PORT }}",
+                    "MONGODB_URL": "${{ secrets.MONGODB_URL }}",
+                    "APP_ORIGIN": "${{ secrets.APP_ORIGIN }}",
+                    "JWT_KEY": "${{ secrets.JWT_KEY }}",
+                    "PRIVATE_GOOGLE_CLIENT_ID": "${{ secrets.PRIVATE_GOOGLE_CLIENT_ID }}",
+                    "PRIVATE_GOOGLE_CLIENT_SECRET": "${{ secrets.PRIVATE_GOOGLE_CLIENT_SECRET }}",
+                    "REDIRECT_URL": "${{ secrets.REDIRECT_URL }}",
+                    "CLOUDINARY_CLOUD_NAME": "${{ secrets.CLOUDINARY_CLOUD_NAME }}",
+                    "CLOUDINARY_API_KEY": "${{ secrets.CLOUDINARY_API_KEY }}",
+                    "CLOUDINARY_API_SECRET": "${{ secrets.CLOUDINARY_API_SECRET }}"
+                  }
+                }'
