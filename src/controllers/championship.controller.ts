@@ -1,9 +1,11 @@
+import { HTTP_RESPONSE_CODE } from "../constants/appHttpCode";
+import uploadImage from "../lib/upload-image";
 import { ChampionshipModel, MatchModel, PlayerModel } from "../models";
 import catchErrors from "../utils/catchErrors";
 
 //* Crear un campeonato
 const createChampionship = catchErrors(async (req, res) => {
-  const { championshipName, ...data } = req.body;
+  const { championshipName, logoUrl, ...data } = req.body;
 
   const championship = await ChampionshipModel.exists({ championshipName });
 
@@ -14,12 +16,19 @@ const createChampionship = catchErrors(async (req, res) => {
     });
   }
 
+  if (logoUrl) {
+    const url = await uploadImage("championships", logoUrl);
+    data.logoUrl = url;
+  }
+
+  console.log(data);
+
   const newChampionship = await ChampionshipModel.create({
     championshipName,
     ...data,
   });
 
-  res.status(201).json({
+  res.status(HTTP_RESPONSE_CODE.CREATED).json({
     status: "success",
     data: newChampionship,
   });
@@ -143,9 +152,7 @@ const updateTeamsInChampionship = catchErrors(async (req, res) => {
   }
 
   // Filtrar equipos que ya existen para evitar duplicados
-  const existingTeamNames = new Set(
-    championship?.teams.map((team) => team.name)
-  );
+  const existingTeamNames = new Set(championship?.teams.map((team) => team));
   const newTeams = teams.filter(
     (team: any) => !existingTeamNames.has(team.name)
   );

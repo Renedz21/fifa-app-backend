@@ -42,6 +42,10 @@ const getAllPlayers = catchErrors(async (req, res) => {
   };
 
   const players = await PlayerModel.find({ tenantId })
+    .populate({
+      path: "tenantId",
+      select: "_id name",
+    })
     .sort(sortQuery as any)
     .skip((pageNum - 1) * limitNum)
     .limit(limitNum);

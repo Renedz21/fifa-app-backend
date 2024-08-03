@@ -16,7 +16,10 @@ const JWT_SECRET = envs.JWT_KEY || "your-jwt-secret";
 
 export const login = catchErrors(async (req, res) => {
   const { email, password } = req.body;
-  const user = await PlayerModel.findOne({ email });
+  const user = await PlayerModel.findOne({ email }).populate({
+    path: "tenantId",
+    select: "_id name",
+  });
   if (!user || !(await user.comparePassword(password))) {
     res
       .status(HTTP_RESPONSE_CODE.UNAUTHORIZED)
@@ -24,7 +27,12 @@ export const login = catchErrors(async (req, res) => {
   }
 
   const token = jwt.sign(
-    { userId: user?._id, role: user?.role, email: user?.email },
+    {
+      userId: user?._id,
+      role: user?.role,
+      email: user?.email,
+      tenantId: user?.tenantId,
+    },
     JWT_SECRET,
     {
       expiresIn: "1h",
