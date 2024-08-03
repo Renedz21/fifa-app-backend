@@ -7,6 +7,7 @@ enum TypeStatus {
 
 interface IMatch extends Document {
   championship: string; // ID del campeonato
+  tenantId: string; // ID de la organización
   teamA: {
     name: string;
     logoUrl: string;
@@ -29,6 +30,7 @@ const MatchSchema: Schema = new Schema({
     ref: "Championship",
     required: true,
   },
+  tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", required: true },
   teamA: {
     name: { type: String, required: true },
     logoUrl: { type: String, required: true },

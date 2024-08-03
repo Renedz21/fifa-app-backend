@@ -1,8 +1,14 @@
 import { Router } from "express";
-import { getTeams } from "../controllers/team.controller";
+import {
+  createTeam,
+  getTeams,
+  getTeamsDb,
+} from "../controllers/team.controller";
 
 const router = Router();
 
-router.get("/", getTeams);
+router.post("/", createTeam);
+router.get("/", getTeamsDb);
+router.get("/getjson", getTeams);
 
 export default router;

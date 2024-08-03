@@ -1,6 +1,9 @@
 import { HTTP_RESPONSE_CODE } from "../constants/appHttpCode";
+import { envs } from "../constants/environment";
 import PlayerModel from "../models/player.model";
 import catchErrors from "../utils/catchErrors";
+
+import jwt from "jsonwebtoken";
 
 const createPlayer = catchErrors(async (req, res) => {
   const { username, ...data } = req.body;
@@ -23,10 +26,37 @@ const createPlayer = catchErrors(async (req, res) => {
 });
 
 const getAllPlayers = catchErrors(async (req, res) => {
-  const players = await PlayerModel.find();
+  const {
+    limit = 10,
+    page = 1,
+    sort = "createdAt",
+    order = "desc",
+    tenantId,
+  } = req.query;
+
+  const pageNum = parseInt(page as string, 10);
+  const limitNum = parseInt(limit as string, 10);
+
+  const sortQuery = {
+    [sort as string]: order === "desc" ? -1 : 1,
+  };
+
+  const players = await PlayerModel.find({ tenantId })
+    .populate({
+      path: "tenantId",
+      select: "_id name",
+    })
+    .sort(sortQuery as any)
+    .skip((pageNum - 1) * limitNum)
+    .limit(limitNum);
+
+  const totalPlayers = await PlayerModel.countDocuments();
 
   res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
+    total: totalPlayers,
+    page: pageNum,
+    pages: Math.ceil(totalPlayers / limitNum),
     data: players,
   });
 });
@@ -110,6 +140,16 @@ const updateFavoriteTeam = catchErrors(async (req, res) => {
   }
 });
 
+const getActualUser = catchErrors(async (req, res) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    res.status(401).json({ message: "No token provided" });
+  }
+  const decoded = jwt.verify(token, envs.JWT_KEY);
+  res.status(200).json(decoded);
+});
+
 export {
   createPlayer,
   getAllPlayers,
@@ -118,4 +158,5 @@ export {
   deletePlayer,
   selectFavoriteTeam,
   updateFavoriteTeam,
+  getActualUser,
 };
