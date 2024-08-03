@@ -36,7 +36,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: edzon21/my-express-app:latest
+          tags: edzon21/esportsfusion-server:latest
           build-args: |
             PORT=${{ secrets.PORT }}
             MONGODB_URL=${{ secrets.MONGODB_URL }}
