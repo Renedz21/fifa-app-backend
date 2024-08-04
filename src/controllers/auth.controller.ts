@@ -26,8 +26,6 @@ export const login = catchErrors(async (req, res) => {
       .json({ message: "Invalid credentials" });
   }
 
-  console.log({ user });
-
   const token = jwt.sign(
     {
       userId: user?._id,

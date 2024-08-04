@@ -48,8 +48,6 @@ const getAllPlayers = catchErrors(async (req, res) => {
   } = req.query;
   const { enterpriseId } = req.user as any;
 
-  console.log({ enterpriseId });
-
   const pageNum = Math.max(1, parseInt(page as string, 10)); // Asegurarse de que la página no sea menor que 1
   const limitNum = Math.max(1, parseInt(limit as string, 10)); // Asegurarse de que el límite no sea menor que 1
 
@@ -68,7 +66,6 @@ const getAllPlayers = catchErrors(async (req, res) => {
     .skip((pageNum - 1) * limitNum)
     .limit(limitNum)
     .lean(); // Utilizar lean para mejorar el rendimiento de la consulta
-  // console.log({ players });
   if (players.length === 0) {
     res.status(HTTP_RESPONSE_CODE.NOT_FOUND).json({
       status: "error",

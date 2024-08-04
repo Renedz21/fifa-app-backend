@@ -21,8 +21,6 @@ const createChampionship = catchErrors(async (req, res) => {
     data.logoUrl = url;
   }
 
-  console.log(data);
-
   const newChampionship = await ChampionshipModel.create({
     championshipName,
     ...data,
@@ -246,8 +244,6 @@ const getChampionshipStats = catchErrors(async (req, res) => {
     .select("teams matches")
     .populate("teams matches")
     .lean();
-
-  console.log(championship);
 
   if (!championship) {
     res.status(HTTP_RESPONSE_CODE.NOT_FOUND).json({
