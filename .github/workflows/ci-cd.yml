@@ -52,7 +52,7 @@ jobs:
       - name: Deploy to Render
         run: |
           echo "Deploying to Render"
-          curl -X POST https://api.render.com/deploy \
+          curl -X POST https://api.render.com/v1/services/${{secrets.RENDER_SERVICE_ID}}/deploys \
             -H 'Authorization: Bearer ${{ secrets.RENDER_API_KEY }}' \
             -H 'Content-Type: application/json' \
             -d '{

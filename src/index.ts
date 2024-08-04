@@ -50,6 +50,10 @@ app.use(
 app.use(compression());
 app.use("/api/v1", limiter); // Limitador de peticiones
 
+app.use("/api/v1/test", (req, res) => {
+  res.send("Hello World");
+});
+
 app.use("/api/v1/auth", AuthRoute);
 
 app.use(verifyToken);
