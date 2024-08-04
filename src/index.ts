@@ -21,7 +21,7 @@ import {
   MatchRoute,
   ResultRoute,
   AuthRoute,
-  TenantRoute,
+  EnterpriseRoute,
 } from "./routes";
 
 const app: Application = express();
@@ -57,7 +57,7 @@ app.use("/api/v1/players", PlayerRoute);
 app.use("/api/v1/teams", TeamRoute);
 app.use("/api/v1/championships", CampionshipRoute);
 app.use("/api/v1/match", MatchRoute);
-app.use("/api/v1/tenant", TenantRoute);
+app.use("/api/v1/enterprise", EnterpriseRoute);
 app.use("/api/v1/results", ResultRoute);
 
 app.use(configureGlobalErrorHandler(logger));

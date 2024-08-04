@@ -1,23 +1,37 @@
 import { HTTP_RESPONSE_CODE } from "../constants/appHttpCode";
 import { envs } from "../constants/environment";
+import { EnterpriseModel } from "../models";
 import PlayerModel from "../models/player.model";
+import { IUser } from "../models/user.model";
 import catchErrors from "../utils/catchErrors";
 
 import jwt from "jsonwebtoken";
 
 const createPlayer = catchErrors(async (req, res) => {
-  const { username, ...data } = req.body;
+  const { username, enterpriseId, ...data } = req.body;
 
   const player = await PlayerModel.exists({ username });
+  const enterprise = await EnterpriseModel.exists({ _id: enterpriseId });
 
   if (player) {
     res.status(HTTP_RESPONSE_CODE.CONFLICT).json({
       status: "error",
       message: "El nombre de usuario ya existe",
     });
+    return;
   }
 
-  const newUser = await PlayerModel.create({ username, ...data });
+  if (!enterprise) {
+    res.status(HTTP_RESPONSE_CODE.NOT_FOUND).json({
+      status: "error",
+      message: "La empresa no existe",
+    });
+    return;
+  }
+
+  const newUser = await PlayerModel.create({ username, enterpriseId, ...data });
+
+  newUser.omitPassword();
 
   res.status(HTTP_RESPONSE_CODE.CREATED).json({
     status: "success",
@@ -31,26 +45,37 @@ const getAllPlayers = catchErrors(async (req, res) => {
     page = 1,
     sort = "createdAt",
     order = "desc",
-    tenantId,
   } = req.query;
+  const { enterpriseId } = req.user as any;
 
-  const pageNum = parseInt(page as string, 10);
-  const limitNum = parseInt(limit as string, 10);
+  console.log({ enterpriseId });
 
-  const sortQuery = {
-    [sort as string]: order === "desc" ? -1 : 1,
-  };
+  const pageNum = Math.max(1, parseInt(page as string, 10)); // Asegurarse de que la página no sea menor que 1
+  const limitNum = Math.max(1, parseInt(limit as string, 10)); // Asegurarse de que el límite no sea menor que 1
 
-  const players = await PlayerModel.find({ tenantId })
-    .populate({
-      path: "tenantId",
-      select: "_id name",
-    })
+  const sortQuery = { [sort as any]: order === "desc" ? -1 : 1 };
+
+  // Contar sólo los jugadores que pertenecen a la empresa especificada
+  const totalPlayers = await PlayerModel.countDocuments({ enterpriseId });
+
+  // Obtener los jugadores que pertenecen a la empresa especificada
+  const players = await PlayerModel.find({
+    enterpriseId,
+    role: "player",
+  })
+    .select("-password")
     .sort(sortQuery as any)
     .skip((pageNum - 1) * limitNum)
-    .limit(limitNum);
-
-  const totalPlayers = await PlayerModel.countDocuments();
+    .limit(limitNum)
+    .lean(); // Utilizar lean para mejorar el rendimiento de la consulta
+  // console.log({ players });
+  if (players.length === 0) {
+    res.status(HTTP_RESPONSE_CODE.NOT_FOUND).json({
+      status: "error",
+      message: "No se encontraron jugadores",
+    });
+    return;
+  }
 
   res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
@@ -110,12 +135,14 @@ const selectFavoriteTeam = catchErrors(async (req, res) => {
     );
 
     if (!user) {
-      res.status(404).send("User not found");
+      res.status(HTTP_RESPONSE_CODE.NOT_FOUND).send("User not found");
     }
 
     res.json(user);
   } catch (error) {
-    res.status(500).send("Error updating favorite team");
+    res
+      .status(HTTP_RESPONSE_CODE.SERVER_ERROR)
+      .send("Error updating favorite team");
   }
 });
 
@@ -131,12 +158,14 @@ const updateFavoriteTeam = catchErrors(async (req, res) => {
     );
 
     if (!user) {
-      res.status(404).send("User not found");
+      res.status(HTTP_RESPONSE_CODE.NOT_FOUND).send("User not found");
     }
 
     res.json(user);
   } catch (error) {
-    res.status(500).send("Error updating favorite team");
+    res
+      .status(HTTP_RESPONSE_CODE.SERVER_ERROR)
+      .send("Error updating favorite team");
   }
 });
 
@@ -144,10 +173,12 @@ const getActualUser = catchErrors(async (req, res) => {
   const token = req.cookies.token;
 
   if (!token) {
-    res.status(401).json({ message: "No token provided" });
+    res
+      .status(HTTP_RESPONSE_CODE.UNAUTHORIZED)
+      .json({ message: "No token provided" });
   }
   const decoded = jwt.verify(token, envs.JWT_KEY);
-  res.status(200).json(decoded);
+  res.status(HTTP_RESPONSE_CODE.SUCCESS).json(decoded);
 });
 
 export {

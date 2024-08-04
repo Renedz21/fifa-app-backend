@@ -45,13 +45,17 @@ export const getTeams = catchErrors(async (req, res) => {
 
   fs.readFile(filePath, "utf-8", (err, data) => {
     if (err) {
-      return res.status(500).json({ error: "Error reading the file" });
+      return res
+        .status(HTTP_RESPONSE_CODE.SERVER_ERROR)
+        .json({ error: "Error reading the file" });
     }
     try {
       const teams = JSON.parse(data);
       res.status(HTTP_RESPONSE_CODE.SUCCESS).json(teams);
     } catch (err) {
-      res.status(500).json({ error: "Error parsing the file" });
+      res
+        .status(HTTP_RESPONSE_CODE.SERVER_ERROR)
+        .json({ error: "Error parsing the file" });
     }
   });
 });

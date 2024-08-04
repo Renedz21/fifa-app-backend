@@ -10,7 +10,7 @@ const createChampionship = catchErrors(async (req, res) => {
   const championship = await ChampionshipModel.exists({ championshipName });
 
   if (championship) {
-    res.status(409).json({
+    res.status(HTTP_RESPONSE_CODE.CONFLICT).json({
       status: "error",
       message: "Championship name already exists",
     });
@@ -36,57 +36,79 @@ const createChampionship = catchErrors(async (req, res) => {
 
 //* Agregar un partido a un campeonato en específico
 const addMatchInChampionship = catchErrors(async (req, res) => {
-  const { teamA, teamB, date, ...data } = req.body;
+  const { teamA, teamB, date } = req.body;
   const { championshipId } = req.params;
 
-  const championship = await ChampionshipModel.findById({ championshipId });
-
-  if (championship) {
-    res.status(409).json({
+  if (!teamA || !teamB || !date) {
+    res.status(HTTP_RESPONSE_CODE.BAD_REQUEST).json({
       status: "error",
-      message: "Championship name already exists",
+      message: "Campos requeridos faltantes",
     });
   }
 
+  // Asegúrate de que el campeonato existe
+  const championship = await ChampionshipModel.findById(championshipId)
+    .select("championshipName matches enterpriseId")
+    .lean();
+
+  if (!championship) {
+    res.status(HTTP_RESPONSE_CODE.NOT_FOUND).json({
+      status: "error",
+      message: "Championship not found",
+    });
+  }
+
+  // Crear el nuevo partido
   const match = new MatchModel({
     championship: championshipId,
+    enterpriseId: championship?.enterpriseId,
     teamA,
     teamB,
     date,
   });
-  await match.save();
 
-  championship?.matches.push(match._id as string);
-  await championship?.save();
+  // Guardar el nuevo partido
+  const savedMatch = await match.save();
 
-  res.status(201).json({
+  // Añadir el partido al campeonato sin usar lean, para poder usar métodos de Mongoose
+  await ChampionshipModel.findByIdAndUpdate(
+    championshipId,
+    { $push: { matches: savedMatch._id } },
+    { new: true } // Devuelve el documento actualizado
+  );
+
+  res.status(HTTP_RESPONSE_CODE.CREATED).json({
     status: "success",
-    data: match,
+    data: savedMatch,
   });
 });
 
 const getAllChampionships = catchErrors(async (req, res) => {
-  const { page = 1, limit = 10, fields } = req.query;
+  const { page = 1, limit = 10, name } = req.query;
 
-  const pageNum = parseInt(page as string, 10);
-  const limitNum = parseInt(limit as string, 10);
+  const pageNum = Math.max(1, parseInt(page as string, 10));
+  const limitNum = Math.max(1, parseInt(limit as string, 10));
 
-  // Crear opciones de selección de campos
-  let selectFields = "";
-  if (typeof fields === "string") {
-    selectFields = fields.split(",").join(" ");
-  }
+  // Construir el filtro con base en el nombre si está presente
+  const filter = name
+    ? { championshipName: { $regex: new RegExp(name.toString(), "i") } }
+    : {};
 
-  // Realizar la consulta con paginación y seleción de campos
-  const championships = await ChampionshipModel.find()
-    .select(selectFields)
+  // Usamos lean para mejorar el rendimiento ya que no necesitamos los métodos del documento Mongoose
+  const championships = await ChampionshipModel.find(filter)
+    .populate({
+      path: "teams",
+      select: "name logoUrl",
+    })
+    .select("championshipName logoUrl startDate endDate enterpriseId")
     .skip((pageNum - 1) * limitNum)
-    .limit(limitNum);
+    .limit(limitNum)
+    .lean(); // Agrega .lean() para obtener objetos planos y mejorar el rendimiento
 
-  // Obtener el total de campenatos para la paginación
-  const totalChampionships = await ChampionshipModel.countDocuments();
+  // Obtener el total de campeonatos que coinciden con el filtro para la paginación
+  const totalChampionships = await ChampionshipModel.countDocuments(filter);
 
-  res.status(200).json({
+  res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
     total: totalChampionships,
     page: pageNum,
@@ -97,12 +119,41 @@ const getAllChampionships = catchErrors(async (req, res) => {
 
 const getOneChampionship = catchErrors(async (req, res) => {
   const { championshipId } = req.params;
+
+  if (!championshipId) {
+    res.status(HTTP_RESPONSE_CODE.BAD_REQUEST).json({
+      status: "fail",
+      message: "Championship ID is required",
+    });
+  }
+
   // Realizar la consulta con paginación y seleción de campos
   const championship = await ChampionshipModel.findOne({
     _id: championshipId,
-  });
+  })
+    .populate({
+      path: "teams",
+      select: "name logoUrl",
+    })
+    .populate({
+      path: "matches",
+      select: "teamA teamB date status",
+      populate: [
+        {
+          path: "teamA",
+          model: "Team",
+          select: "name logoUrl",
+        },
+        {
+          path: "teamB",
+          model: "Team",
+          select: "name logoUrl",
+        },
+      ],
+    })
+    .lean();
 
-  res.status(200).json({
+  res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
     data: championship,
   });
@@ -114,10 +165,12 @@ const updateChampionship = catchErrors(async (req, res) => {
 
   const championship = await ChampionshipModel.findById({
     _id: championshipId,
-  });
+  })
+    .select("championshipName")
+    .lean();
 
   if (!championship) {
-    res.status(404).json({
+    res.status(HTTP_RESPONSE_CODE.NOT_FOUND).json({
       status: "fail",
       message: "Championship not found",
     });
@@ -131,7 +184,7 @@ const updateChampionship = catchErrors(async (req, res) => {
     }
   );
 
-  res.status(200).json({
+  res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
     data: updatedChampionship,
     message: "Championship updated successfully",
@@ -140,32 +193,25 @@ const updateChampionship = catchErrors(async (req, res) => {
 
 const updateTeamsInChampionship = catchErrors(async (req, res) => {
   const { championshipId } = req.params;
-  const { teams } = req.body;
+  const { teams } = req.body; // Asumimos que estos son los ID de los equipos a agregar
 
-  const championship = await ChampionshipModel.findById(championshipId);
+  // Buscar el campeonato y actualizarlo en una sola operación si es posible
+  const updatedChampionship = await ChampionshipModel.findByIdAndUpdate(
+    championshipId,
+    { $addToSet: { teams: { $each: teams } } }, // Utiliza $addToSet para evitar duplicados automáticamente
+    { new: true, select: "championshipName teams" } // Devuelve el documento actualizado
+  ).populate("teams", "name logoUrl"); // Si necesitas información específica de los equipos, populalos aquí
 
-  if (!championship) {
-    res.status(404).json({
+  if (!updatedChampionship) {
+    res.status(HTTP_RESPONSE_CODE.NOT_FOUND).json({
       status: "fail",
       message: "Championship not found",
     });
   }
 
-  // Filtrar equipos que ya existen para evitar duplicados
-  const existingTeamNames = new Set(championship?.teams.map((team) => team));
-  const newTeams = teams.filter(
-    (team: any) => !existingTeamNames.has(team.name)
-  );
-
-  // Agregar los nuevos equipos al campeonato
-  championship?.teams.push(...newTeams);
-
-  // Guardar el campeonato actualizado
-  await championship?.save();
-
-  res.status(200).json({
+  res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
-    data: championship,
+    data: updatedChampionship,
     message: "Equipos actualizados correctamente",
   });
 });
@@ -180,13 +226,13 @@ const deleteChampionship = catchErrors(async (req, res) => {
   );
 
   if (!championship) {
-    res.status(404).json({
+    res.status(HTTP_RESPONSE_CODE.NOT_FOUND).json({
       status: "fail",
       message: "Championship not found",
     });
   }
 
-  res.status(200).json({
+  res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
     message: "Championship deactivated successfully",
   });
@@ -196,12 +242,15 @@ const deleteChampionship = catchErrors(async (req, res) => {
 const getChampionshipStats = catchErrors(async (req, res) => {
   const { championshipId } = req.params;
 
-  const championship = await ChampionshipModel.findById(
-    championshipId
-  ).populate("teams matches");
+  const championship = await ChampionshipModel.findById(championshipId)
+    .select("teams matches")
+    .populate("teams matches")
+    .lean();
+
+  console.log(championship);
 
   if (!championship) {
-    res.status(404).json({
+    res.status(HTTP_RESPONSE_CODE.NOT_FOUND).json({
       status: "fail",
       message: "Championship not found",
     });
@@ -209,7 +258,9 @@ const getChampionshipStats = catchErrors(async (req, res) => {
 
   const totalTeams = championship?.teams.length;
   const totalMatches = championship?.matches.length;
-  const totalGoals = await MatchModel.aggregate([
+
+  // Obtener el total de goles usando agregación
+  const totalGoalsResult = await MatchModel.aggregate([
     { $match: { championship: championshipId } },
     {
       $group: {
@@ -223,13 +274,17 @@ const getChampionshipStats = catchErrors(async (req, res) => {
     },
   ]);
 
+  // Verificar si la agregación devolvió resultados
+  const totalGoals =
+    totalGoalsResult.length > 0 ? totalGoalsResult[0].totalGoals : 0;
+
   const stats = {
     totalTeams,
     totalMatches,
-    totalGoals: totalGoals[0].totalGoals || 0,
+    totalGoals,
   };
 
-  res.status(200).json({
+  res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     status: "success",
     data: stats,
   });

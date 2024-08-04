@@ -1,6 +1,6 @@
 import { HTTP_RESPONSE_CODE } from "../constants/appHttpCode";
 import { envs } from "../constants/environment";
-import { PlayerModel } from "../models";
+import { AdminModel, EnterpriseModel, PlayerModel, UserModel } from "../models";
 import "dotenv/config";
 import catchErrors from "../utils/catchErrors";
 
@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Request, Response, NextFunction } from "express";
+import { ADMIN, PLAYER } from "../constants/constants";
 
 const GOOGLE_CLIENT_ID = envs.PRIVATE_CLIENT_ID || "your-client-id";
 const GOOGLE_CLIENT_SECRET = envs.PRIVATE_CLIENT_SECRET || "your-client-secret";
@@ -16,22 +17,23 @@ const JWT_SECRET = envs.JWT_KEY || "your-jwt-secret";
 
 export const login = catchErrors(async (req, res) => {
   const { email, password } = req.body;
-  const user = await PlayerModel.findOne({ email }).populate({
-    path: "tenantId",
-    select: "_id name",
-  });
+
+  const user = await UserModel.findOne({ email });
+
   if (!user || !(await user.comparePassword(password))) {
     res
       .status(HTTP_RESPONSE_CODE.UNAUTHORIZED)
       .json({ message: "Invalid credentials" });
   }
 
+  console.log({ user });
+
   const token = jwt.sign(
     {
       userId: user?._id,
       role: user?.role,
       email: user?.email,
-      tenantId: user?.tenantId,
+      enterpriseId: user?.enterpriseId,
     },
     JWT_SECRET,
     {
@@ -40,12 +42,12 @@ export const login = catchErrors(async (req, res) => {
   );
 
   res.cookie("token", token, {
-    // httpOnly: true,
     httpOnly: process.env.NODE_ENV === "production",
     secure: process.env.NODE_ENV === "production",
     expires: new Date(Date.now() + 3600000), // 1 hour
     maxAge: 3600000,
   });
+
   res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     token,
     user,
@@ -53,19 +55,52 @@ export const login = catchErrors(async (req, res) => {
 });
 
 export const register = catchErrors(async (req, res) => {
-  const { username, email, password } = req.body;
+  const { name, email, password, role, organizationName } = req.body;
+  let user;
 
-  if (!username || !email || !password) {
+  if (!name || !email || !password || !role) {
     res
       .status(HTTP_RESPONSE_CODE.BAD_REQUEST)
-      .json({ message: "Please provide all required fields" });
+      .json({ error: "Please provide all required fields" });
   }
 
-  const user = new PlayerModel({ username, email, password });
-  await user.save();
-  res
-    .status(HTTP_RESPONSE_CODE.CREATED)
-    .json({ message: "User registered successfully" });
+  const existingUser = await UserModel.exists({ email });
+  if (existingUser) {
+    res
+      .status(HTTP_RESPONSE_CODE.BAD_REQUEST)
+      .json({ error: "Email already exists" });
+  }
+
+  let company = await EnterpriseModel.findOne({ name: organizationName });
+
+  if (!company) {
+    company = new EnterpriseModel({ name: organizationName });
+    await company.save();
+  }
+
+  if (role === PLAYER) {
+    user = new PlayerModel({
+      name,
+      email,
+      password,
+      role,
+      enterpriseId: company._id,
+    });
+  } else if (role === ADMIN) {
+    user = new AdminModel({
+      name,
+      email,
+      password,
+      role,
+      enterpriseId: company._id,
+      // organization: company._id,
+    });
+  } else {
+    res.status(HTTP_RESPONSE_CODE.BAD_REQUEST).json({ error: "Invalid role" });
+  }
+
+  await user?.save();
+  res.status(HTTP_RESPONSE_CODE.CREATED).json({ success: true, user });
 });
 
 passport.use(

@@ -1,18 +1,18 @@
 import { Schema, Document, model } from "mongoose";
 
-interface ITenant extends Document {
+export interface IEnterprise extends Document {
   name: string;
   description?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const TenantSchema: Schema = new Schema<ITenant>({
+const EnterpriseSchema: Schema = new Schema<IEnterprise>({
   name: { type: String, required: true, unique: true },
   description: { type: String },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
 
-const TenantModel = model<ITenant>("Tenant", TenantSchema);
-export default TenantModel;
+const EnterpriseModel = model<IEnterprise>("Enterprise", EnterpriseSchema);
+export default EnterpriseModel;

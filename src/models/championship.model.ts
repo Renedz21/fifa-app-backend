@@ -9,7 +9,7 @@ enum ChampionshipStatus {
 interface IChampionship extends Document {
   championshipName: string;
   logoUrl: string;
-  tenantId: string; // ID de la organización
+  enterpriseId: string; // ID de la organización
   teams: string[];
   matches: string[]; // Array de IDs de partidos
   startDate: Date;
@@ -21,13 +21,11 @@ interface IChampionship extends Document {
 const ChampionshipSchema: Schema = new Schema({
   championshipName: { type: String, required: true, index: true },
   logoUrl: { type: String, required: false, default: "" },
-  tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", required: true },
-  // teams: [
-  //   {
-  //     name: { type: String, required: true },
-  //     logoUrl: { type: String, required: true },
-  //   },
-  // ],
+  enterpriseId: {
+    type: Schema.Types.ObjectId,
+    ref: "Enterprise",
+    required: true,
+  },
   teams: [{ type: Schema.Types.ObjectId, ref: "Team" }],
   matches: [{ type: Schema.Types.ObjectId, ref: "Match" }],
   startDate: { type: Date, required: true },

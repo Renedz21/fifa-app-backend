@@ -1,23 +1,20 @@
 import { HTTP_RESPONSE_CODE } from "../constants/appHttpCode";
-import { TenantModel } from "../models";
+import { EnterpriseModel } from "../models";
 import catchErrors from "../utils/catchErrors";
 
-const createTenant = catchErrors(async (req, res) => {
+const createEnterprise = catchErrors(async (req, res) => {
   const { name, ...data } = req.body;
 
   // Validar datos esenciales
   if (!name) {
     res.status(HTTP_RESPONSE_CODE.BAD_REQUEST).json({
       status: "fail",
-      message: "Missing required fields",
+      message: "Name field is required",
     });
   }
 
   // Verificar que el tenant no exista
-  const tenantExists = await TenantModel.exists({
-    name,
-  });
-
+  const tenantExists = await EnterpriseModel.exists({ name });
   if (tenantExists) {
     res.status(HTTP_RESPONSE_CODE.CONFLICT).json({
       status: "fail",
@@ -26,11 +23,7 @@ const createTenant = catchErrors(async (req, res) => {
   }
 
   // Crear el tenant
-
-  const result = await TenantModel.create({
-    name,
-    ...data,
-  });
+  const result = await EnterpriseModel.create({ name, ...data });
 
   res.status(HTTP_RESPONSE_CODE.CREATED).json({
     status: "success",
@@ -38,8 +31,8 @@ const createTenant = catchErrors(async (req, res) => {
   });
 });
 
-const getTenants = catchErrors(async (req, res) => {
-  const tenants = await TenantModel.find();
+const getEnterprises = catchErrors(async (req, res) => {
+  const tenants = await EnterpriseModel.find();
 
   if (!tenants) {
     res.status(HTTP_RESPONSE_CODE.NOT_FOUND).json({
@@ -54,4 +47,4 @@ const getTenants = catchErrors(async (req, res) => {
   });
 });
 
-export { createTenant, getTenants };
+export { createEnterprise, getEnterprises };

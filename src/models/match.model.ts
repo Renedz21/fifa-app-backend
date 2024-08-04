@@ -7,15 +7,9 @@ enum TypeStatus {
 
 interface IMatch extends Document {
   championship: string; // ID del campeonato
-  tenantId: string; // ID de la organización
-  teamA: {
-    name: string;
-    logoUrl: string;
-  };
-  teamB: {
-    name: string;
-    logoUrl: string;
-  };
+  enterpriseId: string; // ID de la organización
+  teamA: string; // ID del equipo A
+  teamB: string; // ID del equipo B
   scoreTeamA: number;
   scoreTeamB: number;
   date: Date;
@@ -30,15 +24,13 @@ const MatchSchema: Schema = new Schema({
     ref: "Championship",
     required: true,
   },
-  tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", required: true },
-  teamA: {
-    name: { type: String, required: true },
-    logoUrl: { type: String, required: true },
+  enterpriseId: {
+    type: Schema.Types.ObjectId,
+    ref: "Enterprise",
+    required: true,
   },
-  teamB: {
-    name: { type: String, required: true },
-    logoUrl: { type: String, required: true },
-  },
+  teamA: { type: Schema.Types.ObjectId, ref: "Team", required: true },
+  teamB: { type: Schema.Types.ObjectId, ref: "Team", required: true },
   scoreTeamA: { type: Number, default: 0 },
   scoreTeamB: { type: Number, default: 0 },
   date: { type: Date, required: true },
