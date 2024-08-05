@@ -3,6 +3,7 @@ import { Schema, Document, model } from "mongoose";
 enum TypeStatus {
   scheduled = "scheduled",
   played = "played",
+  completed = "completed",
 }
 
 interface IMatch extends Document {

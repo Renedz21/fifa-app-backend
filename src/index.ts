@@ -23,6 +23,7 @@ import {
   AuthRoute,
   EnterpriseRoute,
 } from "./routes";
+import { extractEnterpriseId } from "./middleware/extractEnterpriseId";
 
 const app: Application = express();
 const logger = createLogger();
@@ -57,6 +58,8 @@ app.use("/api/v1/test", (req, res) => {
 app.use("/api/v1/auth", AuthRoute);
 
 app.use(verifyToken);
+app.use(extractEnterpriseId);
+
 app.use("/api/v1/players", PlayerRoute);
 app.use("/api/v1/teams", TeamRoute);
 app.use("/api/v1/championships", CampionshipRoute);
