@@ -8,7 +8,9 @@ import catchErrors from "../utils/catchErrors";
 import jwt from "jsonwebtoken";
 
 const createPlayer = catchErrors(async (req, res) => {
-  const { username, enterpriseId, ...data } = req.body;
+  const { username, ...data } = req.body;
+
+  const { enterpriseId } = req;
 
   const player = await PlayerModel.exists({ username });
   const enterprise = await EnterpriseModel.exists({ _id: enterpriseId });
@@ -46,7 +48,7 @@ const getAllPlayers = catchErrors(async (req, res) => {
     sort = "createdAt",
     order = "desc",
   } = req.query;
-  const { enterpriseId } = req.user as any;
+  const { enterpriseId } = req;
 
   const pageNum = Math.max(1, parseInt(page as string, 10)); // Asegurarse de que la página no sea menor que 1
   const limitNum = Math.max(1, parseInt(limit as string, 10)); // Asegurarse de que el límite no sea menor que 1

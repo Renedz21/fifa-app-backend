@@ -3,14 +3,8 @@ import { Schema, Document, model } from "mongoose";
 interface IResult extends Document {
   matchId: string; // ID del partido
   enterpriseId: string; // ID de la organización
-  winningTeam: {
-    name: string;
-    logoUrl: string;
-  };
-  losingTeam: {
-    name: string;
-    logoUrl: string;
-  };
+  winningTeam: string;
+  losingTeam: string;
   draw: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -23,22 +17,8 @@ const ResultSchema: Schema = new Schema({
     ref: "Enterprise",
     required: true,
   },
-  winningTeam: {
-    name: {
-      type: String,
-    },
-    logoUrl: {
-      type: String,
-    },
-  },
-  losingTeam: {
-    name: {
-      type: String,
-    },
-    logoUrl: {
-      type: String,
-    },
-  },
+  winningTeam: { type: Schema.Types.ObjectId, ref: "Team", required: true },
+  losingTeam: { type: Schema.Types.ObjectId, ref: "Team", required: true },
   draw: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
