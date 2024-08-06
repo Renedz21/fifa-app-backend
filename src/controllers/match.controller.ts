@@ -10,6 +10,7 @@ import catchErrors from "../utils/catchErrors";
 const createMatch = catchErrors(async (req, res) => {
   const { championship, teamA, teamB, date } = req.body;
   const { enterpriseId } = req;
+
   // Validar datos esenciales
   if (!championship || !teamA || !teamB || !date) {
     res.status(HTTP_RESPONSE_CODE.BAD_REQUEST).json({
@@ -53,6 +54,15 @@ const createMatch = catchErrors(async (req, res) => {
     date,
     enterpriseId,
   });
+
+  // Actualizar la lista de partidos en el campeonato
+  await ChampionshipModel.findByIdAndUpdate(championship, {
+    $push: {
+      matches: match._id,
+      teams: { $each: [teamA, teamB] }, // Agregar ambos equipos al arreglo de equipos
+    },
+  });
+
   res.status(HTTP_RESPONSE_CODE.CREATED).json({
     status: "success",
     data: match,
@@ -76,16 +86,22 @@ const getMatches = catchErrors(async (req, res) => {
   })
     .select("championship teamA teamB date status scoreTeamA scoreTeamB") // Seleccionar solo los campos necesarios
     .populate({
-      path: "championship",
-      select: "championshipName logoUrl", // Selección específica para reducir la carga de datos
-    })
-    .populate({
       path: "teamA",
       select: "name logoUrl",
       populate: [
         {
           path: "players",
-          select: "name lastNam",
+          select: "name lastName",
+        },
+      ],
+    })
+    .populate({
+      path: "teamB",
+      select: "name logoUrl",
+      populate: [
+        {
+          path: "players",
+          select: "name lastName",
         },
       ],
     })
