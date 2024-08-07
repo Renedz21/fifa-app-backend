@@ -13,6 +13,7 @@ import configureGlobalErrorHandler from "./middleware/error.handler";
 import { envs } from "./constants/environment";
 import limiter from "./utils/limit";
 import { createLogger } from "./lib/logger";
+import "dotenv/config";
 
 import {
   PlayerRoute,
@@ -34,7 +35,10 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: envs.APP_ORIGIN,
+    origin:
+      process.env.NODE_ENV === "production"
+        ? envs.APP_ORIGIN
+        : "http://localhost:5173",
     credentials: true,
   })
 );
