@@ -163,11 +163,21 @@ const getOneChampionship = catchErrors(async (req, res) => {
   })
     .populate({
       path: "teams",
-      select: "name logoUrl",
+      select: "name logoUrl players",
+      populate: [
+        {
+          path: "players",
+          select: "name",
+        },
+      ],
+    })
+    .populate({
+      path: "enterpriseId",
+      select: "name",
     })
     .populate({
       path: "matches",
-      select: "teamA teamB date status",
+      select: "teamA teamB date status scoreTeamA scoreTeamB",
       populate: [
         {
           path: "teamA",
@@ -191,7 +201,7 @@ const getOneChampionship = catchErrors(async (req, res) => {
 
 const updateChampionship = catchErrors(async (req, res) => {
   const { championshipId } = req.params;
-  const { ...data } = req.body;
+  const { logoUrl, ...data } = req.body;
 
   // Primero, verificamos si el campeonato existe para evitar una actualización innecesaria
   const championship = await ChampionshipModel.findById(championshipId)
@@ -204,6 +214,19 @@ const updateChampionship = catchErrors(async (req, res) => {
       message: "Championship not found",
     });
     return;
+  }
+
+  if (logoUrl) {
+    const url = await uploadImage("championships", logoUrl);
+
+    if (!url) {
+      res.status(HTTP_RESPONSE_CODE.BAD_REQUEST).json({
+        status: "fail",
+        message: "Failed to upload image",
+      });
+      return;
+    }
+    data.logoUrl = url;
   }
 
   // Actualizar el campeonato solo si fue encontrado

@@ -18,12 +18,25 @@ const JWT_SECRET = envs.JWT_KEY || "your-jwt-secret";
 export const login = catchErrors(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await UserModel.findOne({ email });
+  const user = await UserModel.findOne({ email }).populate({
+    path: "enterpriseId",
+    select: "name",
+  });
 
-  if (!user || !(await user.comparePassword(password))) {
+  if (!user) {
     res
       .status(HTTP_RESPONSE_CODE.UNAUTHORIZED)
-      .json({ message: "Invalid credentials" });
+      .json({ error: "Invalid credentials" });
+    return;
+  }
+
+  const isValid = await user?.comparePassword(password);
+
+  if (!isValid) {
+    res
+      .status(HTTP_RESPONSE_CODE.UNAUTHORIZED)
+      .json({ error: "Invalid credentials" });
+    return;
   }
 
   const token = jwt.sign(
@@ -48,7 +61,7 @@ export const login = catchErrors(async (req, res) => {
 
   res.status(HTTP_RESPONSE_CODE.SUCCESS).json({
     token,
-    user,
+    user: user.omitPassword(),
   });
 });
 
@@ -91,14 +104,15 @@ export const register = catchErrors(async (req, res) => {
       password,
       role,
       enterpriseId: company._id,
-      // organization: company._id,
     });
   } else {
     res.status(HTTP_RESPONSE_CODE.BAD_REQUEST).json({ error: "Invalid role" });
   }
 
   await user?.save();
-  res.status(HTTP_RESPONSE_CODE.CREATED).json({ success: true, user });
+  res
+    .status(HTTP_RESPONSE_CODE.CREATED)
+    .json({ success: true, user: user?.omitPassword() });
 });
 
 passport.use(
