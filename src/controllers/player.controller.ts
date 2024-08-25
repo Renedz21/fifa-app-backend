@@ -2,7 +2,6 @@ import { HTTP_RESPONSE_CODE } from "../constants/appHttpCode";
 import { envs } from "../constants/environment";
 import { EnterpriseModel } from "../models";
 import PlayerModel from "../models/player.model";
-import { IUser } from "../models/user.model";
 import catchErrors from "../utils/catchErrors";
 
 import jwt from "jsonwebtoken";

@@ -25,6 +25,7 @@ import {
   EnterpriseRoute,
 } from "./routes";
 import { extractEnterpriseId } from "./middleware/extractEnterpriseId";
+import { paginationMiddleware } from "./middleware/pagination.middleware";
 
 const app: Application = express();
 const logger = createLogger();
@@ -63,6 +64,7 @@ app.use("/api/v1/auth", AuthRoute);
 
 app.use(verifyToken);
 app.use(extractEnterpriseId);
+app.use(paginationMiddleware);
 
 app.use("/api/v1/players", PlayerRoute);
 app.use("/api/v1/teams", TeamRoute);

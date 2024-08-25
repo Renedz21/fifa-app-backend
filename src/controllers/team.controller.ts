@@ -8,6 +8,7 @@ import uploadImage from "../lib/upload-image";
 
 const createTeam = catchErrors(async (req, res) => {
   const { name, logoUrl, ...data } = req.body;
+  const { enterpriseId } = req;
 
   const team = await TeamModel.exists({ name });
 
@@ -24,6 +25,7 @@ const createTeam = catchErrors(async (req, res) => {
       res.status(HTTP_RESPONSE_CODE.BAD_REQUEST).json({
         error: "Error uploading the image",
       });
+      return;
     }
 
     data.logoUrl = logo;
@@ -31,6 +33,7 @@ const createTeam = catchErrors(async (req, res) => {
 
   const newTeam = await TeamModel.create({
     name,
+    enterpriseId,
     ...data,
   });
 
@@ -61,12 +64,10 @@ const getTeams = catchErrors(async (req, res) => {
 });
 
 const getTeamsDb = catchErrors(async (req, res) => {
-  const { page = 1, limit = 10, name } = req.query;
-  console.log("req", req.query);
-  // const { enterpriseId } = req;
-
-  const pageNum = Math.max(1, parseInt(page as string, 10));
-  const limitNum = Math.max(1, parseInt(limit as string, 10));
+  const { page, limit, name } = req.query;
+  const pageNum = parseInt(page as string, 10);
+  const limitNum = parseInt(limit as string, 2);
+  const { enterpriseId } = req;
 
   const filter = name
     ? { name: { $regex: new RegExp(name.toString(), "i") } }
@@ -74,11 +75,12 @@ const getTeamsDb = catchErrors(async (req, res) => {
 
   const teams = await TeamModel.find({
     ...filter,
-    // enterprise: enterpriseId,
+    enterpriseId,
   })
+    .select("logoUrl name players")
     .populate({
       path: "players",
-      select: "_id fullName email username avatarUrl ",
+      select: "name lastName email avatarUrl",
     })
     .sort({ createdAt: -1 })
     .skip((pageNum - 1) * limitNum)
@@ -95,7 +97,7 @@ const getTeamsDb = catchErrors(async (req, res) => {
     success: true,
     total: totalTeams,
     page: pageNum,
-    pages: Math.ceil(totalTeams / limitNum),
+    totalPages: pageNum > 0 ? Math.ceil(totalTeams / limitNum) : 0,
     data: teams,
   });
 });
